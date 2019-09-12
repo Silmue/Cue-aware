@@ -1,4 +1,4 @@
-data: '../../../dataset/LPBA40/samples/'
+data: '../../../dataset/LPBA/samples/'
 epoch: 10
 n_iters: 4000
 batch_size: 8
