@@ -61,11 +61,9 @@ def downconv(in_chnls, out_chnls, kernel_size):
     return nn.Sequential(
         nn.Conv3d(in_chnls, out_chnls, kernel_size,
                   stride=2, padding=(kernel_size-1)//2),
-        nn.BatchNorm3d(out_chnls),
         nn.ReLU(inplace=True),
         nn.Conv3d(out_chnls, out_chnls, kernel_size,
                   stride=1, padding=(kernel_size-1)//2),
-        nn.BatchNorm3d(out_chnls),
         nn.ReLU(inplace=True)
     )
 
@@ -91,18 +89,7 @@ class DRN(nn.Module):
         self.fc3 = fclayer(1024, 128)
         self.fc4 = fclayer(128, 3, tanh_activation=True)
 
-    # def forward(self, input):
-    #     return nn.Sequential(
-    #         self.conv1,
-    #         self.conv2,
-    #         self.pool1,
-    #         self.conv3,
-    #         self.conv4,
-    #         self.fc1,
-    #         self.fc2,
-    #         self.fc3,
-    #         self.fc4
-    #     )(input)
+
     def init_weight(self):
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
