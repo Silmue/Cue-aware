@@ -5,10 +5,14 @@ from data_loader import Data_loader
 from cadrn import CADRN
 import os
 
+gpus = [0]
+cuda_gpu = torch.cuda.is_available()
 
 class DIRCADRN():
     def __init__(self, config):
         self.cadrn = CADRN(config['patch_size'], config['kernel_size'])
+        if cuda_gpu:
+            self.cadrn = torch.nn.DataParallel(self.cadrn, device_ids=gpus).cuda()
         self.config = config
         self.lossfun = nn.MSELoss()
 
@@ -18,6 +22,9 @@ class DIRCADRN():
         self.train_loader.reset()
         for i in range(config['n_iters']):
             sta, mov, disfield = self.train_loader.data_batch()
+            if cuda_gpu:
+                sta = sta.cuda()
+                mov = mov.cuda()
             dis_pred = self.cadrn((sta, mov)) * config['delta']
             if i%20 == 0 and debug:
                 print(disfield)
