@@ -13,6 +13,7 @@ class CADRN(nn.Module):
         self.cPool = ChannelPool(self.kernel_size-1)
         self.DRN = DRN()
         self.DRN.init_weight()
+        self.cuel = CueLayer()
 
     def init_weight(self):
             for m in self.modules():
@@ -27,10 +28,8 @@ class CADRN(nn.Module):
         context_cue = None
         for sta, mov in zip(input[0], input[1]):
             tmp = None
-            mov = mov.unsqueeze(0).unsqueeze(0)
-            sta = sta.unsqueeze(0).unsqueeze(0)
             for s in range(2, k+1):
-                x = F.conv3d(mov, sta[:, :, c-s:c+s+1, c-s:c+s+1, c-s:c+s+1], padding=s)
+                x = self.cuel(mov, sta[c-s:c+s+1, c-s:c+s+1, c-s:c+s+1], s, self.patch_size)
                 try:
                     tmp = torch.cat((tmp, x), dim=1)
                 except:
@@ -45,6 +44,22 @@ class CADRN(nn.Module):
 #            print(context_cue.size())
         pooled_cue = self.cPool(context_cue)
         return self.DRN(torch.cat((input[0].unsqueeze(1), input[1].unsqueeze(1), pooled_cue), dim=1))
+
+
+class CueLayer(nn.Module):
+    def __init__(self):
+        super(CueLayer, self).__init__()
+
+    def forward(self, input, filter, s, p):
+        x = F.conv3d(input.unsqueeze(0).unsqueeze(0), filter.unsqueeze(0).unsqueeze(0), padding=s)
+        sta_norm = torch.norm(filter, p=2) + 1e-7
+        mov = F.pad(input, pad=[s]*6)
+        for i in range(s, p-s):
+            for j in range(s, p-s):
+                for k in range(s, p-s):
+                    x[0, 0, i-s, j-s, k-s] /= (torch.norm(mov[i-s:i+s+1, j-s:j+s+1, k-s:k+s+1], p=2) + 1e-7) * sta_norm
+        return x
+
 
 
 class ChannelPool(nn.MaxPool1d):
