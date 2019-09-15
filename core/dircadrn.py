@@ -12,7 +12,7 @@ class DIRCADRN():
     def __init__(self, config):
         self.cadrn = CADRN(config['patch_size'], config['kernel_size'])
         if cuda_gpu:
-            self.cadrn = torch.nn.DataParallel(self.cadrn, device_ids=gpus).cuda()
+            self.cadrn = self.cadrn.cuda()
         self.config = config
         self.lossfun = nn.MSELoss()
 
@@ -20,6 +20,8 @@ class DIRCADRN():
         config = self.config
         loss_sum = 0
         self.train_loader.reset()
+        for i in self.cadrn.named_parameters():
+            print(i)
         for i in range(config['n_iters']):
             sta, mov, disfield = self.train_loader.data_batch()
             if cuda_gpu:
@@ -30,7 +32,7 @@ class DIRCADRN():
                 print(disfield)
                 print(dis_pred)
 
-            loss = self.lossfun(dis_pred, disfield)
+            loss = self.lossfun(dis_pred.cpu(), disfield)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
