@@ -20,6 +20,8 @@ class DIRCADRN():
         config = self.config
         loss_sum = 0
         self.train_loader.reset()
+        print('start epoch{}'.format(self.epoch))
+        print('parametets:')
         for i in self.cadrn.named_parameters():
             print(i)
         for i in range(config['n_iters']):
@@ -28,7 +30,7 @@ class DIRCADRN():
                 sta = sta.cuda()
                 mov = mov.cuda()
             dis_pred = self.cadrn((sta, mov)) * config['delta']
-            if i%20 == 0 and debug:
+            if i%1000 == 0 and debug:
                 print(disfield)
                 print(dis_pred)
 

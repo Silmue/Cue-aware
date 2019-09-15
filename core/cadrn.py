@@ -35,10 +35,14 @@ class CADRN(nn.Module):
                     tmp = torch.cat((tmp, x), dim=1)
                 except:
                     tmp = x
+#                print('tmp size <s={}>'.format(s))
+#                print(tmp.size())
             try:
                 context_cue = torch.cat((context_cue, tmp), dim=0)
             except:
                 context_cue = tmp
+#            print('cue size')
+#            print(context_cue.size())
         pooled_cue = self.cPool(context_cue)
         return self.DRN(torch.cat((input[0].unsqueeze(1), input[1].unsqueeze(1), pooled_cue), dim=1))
 
@@ -67,11 +71,15 @@ def downconv(in_chnls, out_chnls, kernel_size):
         nn.ReLU(inplace=True)
     )
 
+class identity(nn.Module):
+    def forward(self, input):
+        return input
+
 
 def fclayer(in_chnls, out_chnls, tanh_activation=False):
     return nn.Sequential(
         nn.Linear(in_chnls, out_chnls),
-        nn.BatchNorm1d(out_chnls),
+        nn.BatchNorm1d(out_chnls) if not tanh_activation else identity(),
         nn.Tanh() if tanh_activation else nn.ReLU()
     )
 
