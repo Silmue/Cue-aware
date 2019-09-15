@@ -1,2 +1,5 @@
 .ipynb_checkpoints/*
 .idea/*
+core/__pycache__/*
+ckpt*
+*out

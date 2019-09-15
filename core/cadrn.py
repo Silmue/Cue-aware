@@ -14,12 +14,12 @@ class CADRN(nn.Module):
         self.DRN = DRN()
         self.DRN.init_weight()
 
-    # def init_weight(self):
-    #         for m in self.modules():
-    #             if isinstance(m, nn.Conv3d):
-    #                 nn.init.xavier_normal_(m.weight)
-    #                 if m.bias is not None:
-    #                     nn.init.zeros_(m.bias)
+    def init_weight(self):
+            for m in self.modules():
+                if isinstance(m, nn.Conv3d):
+                    nn.init.xavier_normal_(m.weight)
+                    if m.bias is not None:
+                        nn.init.zeros_(m.bias)
 
     def forward(self, input):
         c = self.patch_center
