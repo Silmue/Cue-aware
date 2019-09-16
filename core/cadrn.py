@@ -13,7 +13,7 @@ class CADRN(nn.Module):
         self.cPool = ChannelPool(self.kernel_size-1)
         self.DRN = DRN()
         self.DRN.init_weight()
-        self.cuel = CueLayer()
+        self.cuel = CueLayer(kernel_size)
 
     def init_weight(self):
             for m in self.modules():
@@ -47,8 +47,10 @@ class CADRN(nn.Module):
 
 
 class CueLayer(nn.Module):
-    def __init__(self):
+    def __init__(self, k):
         super(CueLayer, self).__init__()
+        self.register_buffer('bias', torch.Tensor([1e-9]))
+        self.register_buffer('w', torch.Tensor([1]*((k*2+1)**3)).view(1, 1, k*2+1, k*2+1, k*2+1))
 
     def forward(self, input, filter, s, p):
         x = F.conv3d(input.unsqueeze(0).unsqueeze(0), filter.unsqueeze(0).unsqueeze(0), padding=s)
@@ -59,8 +61,7 @@ class CueLayer(nn.Module):
         #         for k in range(s, p-s):
         #             x[0, 0, i-s, j-s, k-s] /= (torch.norm(mov[i-s:i+s+1, j-s:j+s+1, k-s:k+s+1], p=2) + 1e-7) * sta_norm
         mov_square = mov * mov
-        w = torch.Tensor([1]*((s*2+1)**3)).view(1, 1, s*2+1, s*2+1, s*2+1)
-        mov_square_sum = F.conv3d(mov_square.unsqueeze(0).unsqueeze(0), w, bias=torch.Tensor([1e-9]))
+        mov_square_sum = F.conv3d(mov_square.unsqueeze(0).unsqueeze(0), self.w[:, :, :s*2+1, :s*2+1, :s*2+1], bias=self.bias)
         mov_subregion_norm = mov_square_sum.sqrt()
         x = x / mov_subregion_norm / sta_norm
         return x
