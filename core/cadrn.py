@@ -54,10 +54,15 @@ class CueLayer(nn.Module):
         x = F.conv3d(input.unsqueeze(0).unsqueeze(0), filter.unsqueeze(0).unsqueeze(0), padding=s)
         sta_norm = torch.norm(filter, p=2) + 1e-7
         mov = F.pad(input, pad=[s]*6)
-        for i in range(s, p-s):
-            for j in range(s, p-s):
-                for k in range(s, p-s):
-                    x[0, 0, i-s, j-s, k-s] /= (torch.norm(mov[i-s:i+s+1, j-s:j+s+1, k-s:k+s+1], p=2) + 1e-7) * sta_norm
+        # for i in range(s, p-s):
+        #     for j in range(s, p-s):
+        #         for k in range(s, p-s):
+        #             x[0, 0, i-s, j-s, k-s] /= (torch.norm(mov[i-s:i+s+1, j-s:j+s+1, k-s:k+s+1], p=2) + 1e-7) * sta_norm
+        mov_square = mov * mov
+        w = torch.Tensor([1]*((s*2+1)**3)).view(1, 1, s*2+1, s*2+1, s*2+1)
+        mov_square_sum = F.conv3d(mov_square.unsqueeze(0).unsqueeze(0), w, bias=torch.Tensor([1e-9]))
+        mov_subregion_norm = mov_square_sum.sqrt()
+        x = x / mov_subregion_norm / sta_norm
         return x
 
 
